@@ -3,6 +3,8 @@
 DARK_VARS = """
     --bg: #0f0f10;
     --surface: #161618;
+    --term-bg: #111113;
+    --term-bar: #1b1b1f;
     --text: #ececee;
     --text-muted: #a1a1aa;
     --border-subtle: #27272a;
@@ -15,6 +17,8 @@ DARK_VARS = """
 LIGHT_VARS = """
     --bg: #fafafa;
     --surface: #f0f0f2;
+    --term-bg: #f4f4f5;
+    --term-bar: #e4e4e7;
     --text: #18181b;
     --text-muted: #52525b;
     --border-subtle: #d4d4d8;
@@ -123,14 +127,42 @@ button[kind="secondary"],
     padding-bottom: 4rem;
 }}
 
-/* Style the TL;DR blockquote as a crisp flat callout box. */
+/* Style the TL;DR blockquote as a crisp terminal window card. */
 [data-testid="stMarkdownContainer"] blockquote {{
-    border-left: 3px solid var(--accent);
-    background-color: var(--surface);
-    padding: 0.9rem 1.1rem;
-    margin: 1.1rem 0 1.5rem 0;
-    border-radius: 6px;
+    border: 1px solid var(--border-subtle);
+    border-left: 1px solid var(--border-subtle);
+    background-color: var(--term-bg);
+    padding: 0 1.2rem 1.05rem 1.2rem;
+    margin: 1.1rem 0 1.6rem 0;
+    border-radius: 8px;
+    overflow: hidden;
     color: var(--text);
+}}
+
+[data-testid="stMarkdownContainer"] blockquote::before {{
+    content: "●  ●  ●    ~/docbrief/tldr";
+    display: block;
+    background-color: var(--term-bar);
+    border-bottom: 1px solid var(--border-subtle);
+    margin: 0 -1.2rem 0.9rem -1.2rem;
+    padding: 0.45rem 1rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+}}
+
+[data-testid="stMarkdownContainer"] blockquote p {{
+    margin: 0;
+}}
+
+[data-testid="stMarkdownContainer"] blockquote p::before {{
+    content: "$ ";
+    color: var(--text-muted);
+    font-weight: 600;
+}}
+
+[data-testid="stMarkdownContainer"] blockquote strong {{
+    color: var(--accent);
 }}
 
 [data-testid="stMarkdownContainer"] h2 {{

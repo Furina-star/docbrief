@@ -73,3 +73,16 @@ def test_stream_analysis_wraps_rate_limit_error():
     with patch("analyzer.genai.Client", return_value=mock_client):
         with pytest.raises(AnalysisError, match="(?i)rate limit|quota"):
             list(stream_analysis(doc, api_key="test-key"))
+
+
+# Verify non-auth INVALID_ARGUMENT errors are not misreported as bad API keys.
+def test_stream_analysis_does_not_misclassify_invalid_argument_as_auth():
+    doc = _sample_doc()
+    mock_client = MagicMock()
+    mock_client.models.generate_content_stream.side_effect = RuntimeError(
+        "400 INVALID_ARGUMENT: bad request payload"
+    )
+
+    with patch("analyzer.genai.Client", return_value=mock_client):
+        with pytest.raises(AnalysisError, match="Gemini request failed"):
+            list(stream_analysis(doc, api_key="test-key"))

@@ -8,7 +8,7 @@ from google.genai import types
 from extractor import DocumentData
 
 DEFAULT_MODEL = "gemini-2.5-flash"
-AVAILABLE_MODELS = ("gemini-2.5-flash", "gemini-2.5-flash-lite")
+AVAILABLE_MODELS = ("gemini-2.5-flash", "gemini-3.5-flash-lite")
 MAX_INPUT_CHARS = 400_000
 
 SYSTEM_INSTRUCTION = """You are a sharp, concise document reader.
@@ -51,7 +51,10 @@ def stream_analysis(
             "Missing Gemini API key. Add GEMINI_API_KEY to .env or paste it in the sidebar."
         )
 
-    client = genai.Client(api_key=cleaned_key)
+    client = genai.Client(
+        api_key=cleaned_key,
+        http_options=types.HttpOptions(api_version="v1beta"),
+    )
     config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
         temperature=0.2,
@@ -71,9 +74,13 @@ def stream_analysis(
         lower = message.lower()
         if "429" in lower or "quota" in lower or "resource_exhausted" in lower:
             raise AnalysisError(
-                "Gemini free-tier rate limit reached. Wait a moment or switch to gemini-2.5-flash-lite."
+                "Gemini free-tier rate limit reached. Wait a moment or switch to gemini-3.5-flash-lite."
             ) from exc
-        if "401" in lower or "403" in lower or "api key" in lower or "invalid" in lower:
+        if "503" in lower or "unavailable" in lower:
+            raise AnalysisError(
+                "Gemini is temporarily busy (503). Retry in a few seconds or switch to gemini-3.5-flash-lite."
+            ) from exc
+        if "401" in lower or "403" in lower or "api_key_invalid" in lower or "api key" in lower:
             raise AnalysisError(
                 "Gemini API key was rejected. Check that your key is valid in Google AI Studio."
             ) from exc

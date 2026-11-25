@@ -56,7 +56,7 @@ def _export_filename(title: str) -> str:
 
 
 # Render the sidebar controls and return the user's current input selections.
-def _render_sidebar() -> tuple[str, object, str, bool]:
+def _render_sidebar() -> tuple[str, object, str, bool, bool]:
     with st.sidebar:
         st.markdown("### Docbrief")
         st.caption("TL;DR, summary, key terms & citations.")
@@ -90,7 +90,10 @@ def _render_sidebar() -> tuple[str, object, str, bool]:
             st.divider()
             st.caption(_format_stats(current_doc))
 
-    return mode, uploaded_file, url_input, analyze_clicked
+        st.divider()
+        light_mode = st.toggle("Light mode", value=False)
+
+    return mode, uploaded_file, url_input, analyze_clicked, light_mode
 
 
 # Render the reading sheet header, Markdown brief, download button, and raw text toggle.
@@ -120,9 +123,8 @@ def main() -> None:
         layout="centered",
         initial_sidebar_state="expanded",
     )
-    st.markdown(get_custom_css(), unsafe_allow_html=True)
-
-    mode, uploaded_file, url_input, analyze_clicked = _render_sidebar()
+    mode, uploaded_file, url_input, analyze_clicked, light_mode = _render_sidebar()
+    st.markdown(get_custom_css(light_mode=light_mode), unsafe_allow_html=True)
     api_key = _get_setting("GEMINI_API_KEY")
     configured_model = _get_setting("GEMINI_MODEL", DEFAULT_MODEL)
     model = configured_model if configured_model in AVAILABLE_MODELS else DEFAULT_MODEL

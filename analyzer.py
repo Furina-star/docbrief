@@ -1,11 +1,14 @@
 """Streams structured document summaries from the Google Gemini API."""
 
 from collections.abc import Iterator
+import logging
 
 from google import genai
 from google.genai import types
 
 from extractor import DocumentData
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "gemini-2.5-flash"
 AVAILABLE_MODELS = ("gemini-2.5-flash", "gemini-3.5-flash-lite")
@@ -70,6 +73,7 @@ def stream_analysis(
             if chunk.text:
                 yield chunk.text
     except Exception as exc:
+        logger.error("Gemini stream failed (%s): %s", model, exc)
         message = str(exc)
         lower = message.lower()
         if "429" in lower or "quota" in lower or "resource_exhausted" in lower:

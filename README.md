@@ -19,6 +19,10 @@
   Fast Python web app that reads PDFs, DOCX files, and URLs to stream a TL;DR, summary, key terms, and citations.
 </p>
 
+<p align="center">
+  <strong>Live site:</strong> <a href="https://furina-docbrief.streamlit.app/">furina-docbrief.streamlit.app</a>
+</p>
+
 ## Overview
 
 `docbrief` takes a local file or a web link, extracts the text, and streams a structured reading brief using Google's free Gemini API tier. Citations are included only when the source document actually contains them.

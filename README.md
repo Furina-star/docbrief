@@ -59,7 +59,7 @@ cp .env.example .env
 Set `GEMINI_API_KEY` inside `.env` (you can also paste a key directly in the sidebar for the current session):
 
 ```env
-GEMINI_API_KEY=your_api_key_here
+GEMINI_API_KEY=api_key_here
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
@@ -94,7 +94,7 @@ pytest -v
 ## Notes
 
 - Scanned image-only PDFs without an embedded text layer cannot be read without OCR and will return an error message.
-- If you hit the free-tier rate limit on `gemini-2.5-flash`, switch to `gemini-2.5-flash-lite` in the sidebar or `.env`.
+- If you hit the free-tier rate limit on `gemini-2.5-flash`, switch to `gemini-3.5-flash-lite` in the sidebar or `.env`.
 
 ## License
 

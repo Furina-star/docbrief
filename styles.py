@@ -127,38 +127,34 @@ button[kind="secondary"],
     padding-bottom: 4rem;
 }}
 
-/* Style the TL;DR blockquote as a crisp terminal window card. */
+/* Style the TL;DR blockquote as a sharp TUI panel with a top-border legend. */
 [data-testid="stMarkdownContainer"] blockquote {{
+    position: relative;
     border: 1px solid var(--border-subtle);
     border-left: 1px solid var(--border-subtle);
-    background-color: var(--term-bg);
-    padding: 0 1.2rem 1.05rem 1.2rem;
-    margin: 1.1rem 0 1.6rem 0;
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: 0;
+    background-color: var(--bg);
+    padding: 1.15rem 1.2rem 1rem 1.2rem;
+    margin: 1.4rem 0 1.6rem 0;
+    overflow: visible;
     color: var(--text);
 }}
 
 [data-testid="stMarkdownContainer"] blockquote::before {{
-    content: "●  ●  ●    ~/docbrief/tldr";
-    display: block;
-    background-color: var(--term-bar);
-    border-bottom: 1px solid var(--border-subtle);
-    margin: 0 -1.2rem 0.9rem -1.2rem;
-    padding: 0.45rem 1rem;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    letter-spacing: 0.04em;
+    content: "[ TL;DR ]";
+    position: absolute;
+    top: -0.68rem;
+    left: 0.85rem;
+    background-color: var(--bg);
+    padding: 0 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--accent);
 }}
 
 [data-testid="stMarkdownContainer"] blockquote p {{
     margin: 0;
-}}
-
-[data-testid="stMarkdownContainer"] blockquote p::before {{
-    content: "$ ";
-    color: var(--text-muted);
-    font-weight: 600;
 }}
 
 [data-testid="stMarkdownContainer"] blockquote strong {{

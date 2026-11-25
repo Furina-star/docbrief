@@ -1,11 +1,11 @@
-<h1 align="center">docbrief</h1>
+<h1 align="center">Docbrief</h1>
 
 <p align="center">
+  <a href="https://furina-docbrief.streamlit.app/">
+    <img src="https://img.shields.io/badge/Live_Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white" alt="Live Demo">
+  </a>
   <a href="https://www.python.org/">
     <img src="https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white" alt="Python 3.11+">
-  </a>
-  <a href="https://streamlit.io/">
-    <img src="https://img.shields.io/badge/Streamlit-1.42+-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit">
   </a>
   <a href="https://ai.google.dev/">
     <img src="https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?logo=googlegemini&logoColor=white" alt="Gemini 2.5 Flash">

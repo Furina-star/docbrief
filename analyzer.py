@@ -48,7 +48,7 @@ def stream_analysis(
     cleaned_key = api_key.strip()
     if not cleaned_key:
         raise AnalysisError(
-            "Missing Gemini API key. Add GEMINI_API_KEY to .env or paste it in the sidebar."
+            "Docbrief is not configured yet. Please try again later."
         )
 
     client = genai.Client(
@@ -74,14 +74,16 @@ def stream_analysis(
         lower = message.lower()
         if "429" in lower or "quota" in lower or "resource_exhausted" in lower:
             raise AnalysisError(
-                "Gemini free-tier rate limit reached. Wait a moment or switch to gemini-3.5-flash-lite."
+                "Too many requests right now. Please wait a moment and try again."
             ) from exc
         if "503" in lower or "unavailable" in lower:
             raise AnalysisError(
-                "Gemini is temporarily busy (503). Retry in a few seconds or switch to gemini-3.5-flash-lite."
+                "Service is temporarily busy. Please try again in a few seconds."
             ) from exc
         if "401" in lower or "403" in lower or "api_key_invalid" in lower or "api key" in lower:
             raise AnalysisError(
-                "Gemini API key was rejected. Check that your key is valid in Google AI Studio."
+                "Service configuration error. Please try again later."
             ) from exc
-        raise AnalysisError(f"Gemini request failed: {message}") from exc
+        raise AnalysisError(
+            "Could not analyze this document right now. Please try again."
+        ) from exc

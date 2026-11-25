@@ -1,4 +1,4 @@
-"""Streamlit web interface for uploading or fetching documents and streaming Gemini briefs."""
+"""Streamlit web interface for uploading or fetching documents and streaming briefs."""
 
 import os
 from pathlib import Path
@@ -12,6 +12,17 @@ from extractor import DocumentData, ExtractionError, extract_from_bytes, extract
 from styles import get_custom_css
 
 load_dotenv()
+
+
+# Read a setting from Streamlit secrets first, then fall back to environment variables.
+def _get_setting(name: str, default: str = "") -> str:
+    try:
+        value = st.secrets.get(name)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    except Exception:
+        pass
+    return os.getenv(name, default).strip()
 
 
 # Cache file parsing so Streamlit reruns do not re-parse the same upload.
@@ -45,9 +56,9 @@ def _export_filename(title: str) -> str:
 
 
 # Render the sidebar controls and return the user's current input selections.
-def _render_sidebar() -> tuple[str, object, str, str, str, bool]:
+def _render_sidebar() -> tuple[str, object, str, bool]:
     with st.sidebar:
-        st.markdown("### docbrief")
+        st.markdown("### Docbrief")
         st.caption("TL;DR, summary, key terms & citations.")
 
         mode = st.radio(
@@ -68,21 +79,9 @@ def _render_sidebar() -> tuple[str, object, str, str, str, bool]:
         else:
             url_input = st.text_input(
                 "Document or article URL",
-                placeholder="https://example.com/paper.pdf",
+                placeholder="https://example.com/document.pdf",
                 label_visibility="collapsed",
             )
-
-        env_model = os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
-        default_index = (
-            AVAILABLE_MODELS.index(env_model) if env_model in AVAILABLE_MODELS else 0
-        )
-        model = st.selectbox("Model", AVAILABLE_MODELS, index=default_index)
-
-        key_override = st.text_input(
-            "Gemini API Key (optional)",
-            type="password",
-            placeholder="Uses GEMINI_API_KEY from .env",
-        )
 
         analyze_clicked = st.button("Analyze", type="primary", use_container_width=True)
 
@@ -91,8 +90,7 @@ def _render_sidebar() -> tuple[str, object, str, str, str, bool]:
             st.divider()
             st.caption(_format_stats(current_doc))
 
-    effective_key = key_override.strip() or os.getenv("GEMINI_API_KEY", "").strip()
-    return mode, uploaded_file, url_input, model, effective_key, analyze_clicked
+    return mode, uploaded_file, url_input, analyze_clicked
 
 
 # Render the reading sheet header, Markdown brief, download button, and raw text toggle.
@@ -117,14 +115,17 @@ def _render_result(doc: DocumentData, markdown_output: str) -> None:
 # Entry point for configuring the Streamlit page and handling analysis runs.
 def main() -> None:
     st.set_page_config(
-        page_title="docbrief",
+        page_title="Docbrief",
         page_icon="📄",
         layout="centered",
         initial_sidebar_state="expanded",
     )
     st.markdown(get_custom_css(), unsafe_allow_html=True)
 
-    mode, uploaded_file, url_input, model, api_key, analyze_clicked = _render_sidebar()
+    mode, uploaded_file, url_input, analyze_clicked = _render_sidebar()
+    api_key = _get_setting("GEMINI_API_KEY")
+    configured_model = _get_setting("GEMINI_MODEL", DEFAULT_MODEL)
+    model = configured_model if configured_model in AVAILABLE_MODELS else DEFAULT_MODEL
 
     if analyze_clicked:
         try:
@@ -164,10 +165,10 @@ def main() -> None:
     if "doc" in st.session_state and "result" in st.session_state:
         _render_result(st.session_state["doc"], st.session_state["result"])
     else:
-        st.markdown("# docbrief")
+        st.markdown("# Docbrief")
         st.markdown(
             "Upload a **PDF, DOCX, TXT, or Markdown** file or paste a **URL** "
-            "in the sidebar to stream a TL;DR, summary, key terms, and citations."
+            "in the sidebar to get a TL;DR, summary, key terms, and citations."
         )
         st.caption(
             "On mobile, tap the top-left arrow to open the sidebar."

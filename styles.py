@@ -38,6 +38,22 @@ h1, h2, h3, h4, p, li, blockquote, code, pre {
     border-right: 1px solid var(--border-subtle);
 }
 
+/* Keep primary action button text crisp and legible against the light fill. */
+button[kind="primary"],
+button[kind="primary"] p,
+[data-testid="stBaseButton-primary"],
+[data-testid="stBaseButton-primary"] p {
+    color: #0f0f10 !important;
+    font-weight: 600 !important;
+}
+
+button[kind="primary"]:hover,
+[data-testid="stBaseButton-primary"]:hover {
+    background-color: #ffffff !important;
+    border-color: #ffffff !important;
+    color: #0f0f10 !important;
+}
+
 /* Style the TL;DR blockquote as a crisp flat callout box. */
 [data-testid="stMarkdownContainer"] blockquote {
     border-left: 3px solid #e5e5e5;

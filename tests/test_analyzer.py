@@ -40,7 +40,7 @@ def test_build_prompt_includes_title_and_text():
 def test_stream_analysis_requires_api_key():
     doc = _sample_doc()
 
-    with pytest.raises(AnalysisError, match="(?i)api key"):
+    with pytest.raises(AnalysisError, match="(?i)not configured"):
         list(stream_analysis(doc, api_key="   "))
 
 
@@ -71,7 +71,7 @@ def test_stream_analysis_wraps_rate_limit_error():
     )
 
     with patch("analyzer.genai.Client", return_value=mock_client):
-        with pytest.raises(AnalysisError, match="(?i)rate limit|quota"):
+        with pytest.raises(AnalysisError, match="(?i)too many requests"):
             list(stream_analysis(doc, api_key="test-key"))
 
 
@@ -84,5 +84,5 @@ def test_stream_analysis_does_not_misclassify_invalid_argument_as_auth():
     )
 
     with patch("analyzer.genai.Client", return_value=mock_client):
-        with pytest.raises(AnalysisError, match="Gemini request failed"):
+        with pytest.raises(AnalysisError, match="(?i)could not analyze"):
             list(stream_analysis(doc, api_key="test-key"))

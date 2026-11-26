@@ -9,7 +9,7 @@ import streamlit as st
 
 from analyzer import AVAILABLE_MODELS, DEFAULT_MODEL, AnalysisError, stream_analysis
 from extractor import DocumentData, ExtractionError, extract_from_bytes, extract_from_url
-from keywords import bag_of_words_text, keywords_markdown
+from keywords import bag_of_words_text, keywords_markdown, tfidf_markdown
 from styles import get_custom_css
 
 load_dotenv()
@@ -108,9 +108,11 @@ def _render_result(doc: DocumentData, markdown_output: str) -> None:
     _render_keywords_and_export(doc, markdown_output)
 
 
-# Render the keyword frequency table, download button, and source/bag-of-words toggles.
+# Render the keyword frequency and TF-IDF tables, download button, and source/bag-of-words toggles.
 def _render_keywords_and_export(doc: DocumentData, markdown_output: str) -> None:
-    keywords_md = keywords_markdown(doc.text)
+    keywords_md = "\n\n".join(
+        section for section in (keywords_markdown(doc.text), tfidf_markdown(doc.text)) if section
+    )
     if keywords_md:
         st.markdown(keywords_md)
     st.divider()

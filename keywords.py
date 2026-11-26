@@ -1,6 +1,7 @@
-"""Counts keywords locally with a simple bag-of-words model and ranks them by frequency."""
+"""Counts keywords locally with a bag-of-words model and ranks them by frequency and TF-IDF."""
 
 from collections import Counter
+import math
 import re
 
 TOP_N = 15
@@ -29,6 +30,9 @@ STOPWORDS = frozenset(
 )
 
 _TOKEN_RE = re.compile(r"[a-z]+(?:['’-][a-z]+)*")
+_PARAGRAPH_RE = re.compile(r"\n\s*\n")
+_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
+MIN_PASSAGES = 3
 
 
 # Split text into lowercase word tokens, normalizing curly apostrophes and possessives.
@@ -80,3 +84,49 @@ def keywords_markdown(text: str, top_n: int = TOP_N) -> str:
 def bag_of_words_text(text: str) -> str:
     bag = bag_of_words(text)
     return "\n".join(f"{word}: {count}" for _, word, count in rank_keywords(bag, len(bag)))
+
+
+# Split a document into passages (paragraphs, or sentences when paragraphs are too few).
+def split_passages(text: str) -> list[str]:
+    passages = [p.strip() for p in _PARAGRAPH_RE.split(text) if p.strip()]
+    if len(passages) < MIN_PASSAGES:
+        passages = [s.strip() for s in _SENTENCE_RE.split(text) if s.strip()]
+    return passages
+
+
+# Score each keyword by TF-IDF, treating the document's passages as the corpus.
+def tfidf_scores(text: str) -> dict[str, float]:
+    bag = bag_of_words(text)
+    total = sum(bag.values())
+    if not total:
+        return {}
+    passages = split_passages(text)
+    doc_freq: Counter[str] = Counter()
+    for passage in passages:
+        doc_freq.update(set(bag_of_words(passage)))
+    n = len(passages)
+    return {
+        word: (count / total) * (math.log((1 + n) / (1 + doc_freq[word])) + 1)
+        for word, count in bag.items()
+    }
+
+
+# Render the TF-IDF ranking as a Markdown section for display and .md export.
+def tfidf_markdown(text: str, top_n: int = TOP_N) -> str:
+    scores = tfidf_scores(text)
+    if not scores:
+        return ""
+    bag = bag_of_words(text)
+    ordered = sorted(scores.items(), key=lambda item: (-item[1], item[0]))[:top_n]
+    lines = [
+        "## TF-IDF Keywords",
+        "",
+        f"Scored across {len(split_passages(text)):,} passages · "
+        "frequent words concentrated in fewer passages rank higher",
+        "",
+        "| Rank | Keyword | TF-IDF | Count |",
+        "|---:|:---|---:|---:|",
+    ]
+    for rank, (word, score) in enumerate(ordered, start=1):
+        lines.append(f"| {rank} | {word} | {score:.4f} | {bag[word]:,} |")
+    return "\n".join(lines)

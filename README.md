@@ -31,6 +31,7 @@
 
 - **File upload & URL fetch** — supports `.pdf`, `.docx`, `.txt`, `.md`, `.csv`, remote PDF/DOCX links, and web articles.
 - **Streamed output** — renders the TL;DR, summary, key terms, and conditional citations live as Gemini generates them.
+- **Keyword frequency** — ranks the most frequent words locally (bag of words, stopwords removed) with counts and share; the full bag of words is one click away.
 - **Fast local parsing** — uses `pymupdf` for PDFs and caches parsed documents across Streamlit reruns.
 - **Exportable** — download the generated brief as a `.md` file or inspect the extracted source text.
 - **Clean & responsive UI** — sidebar + reading sheet layout styled in JetBrains Nerd Font Mono (with `JetBrains Mono` web fallback) for desktop and mobile.
@@ -80,6 +81,7 @@ docbrief/
 ├── app.py                  # Streamlit UI, sidebar controls, streaming output, export
 ├── extractor.py            # PDF, DOCX, TXT/MD, and URL text extraction
 ├── analyzer.py             # Gemini API prompt builder and streaming client
+├── keywords.py             # Local bag-of-words keyword counting and ranking
 ├── styles.py               # JetBrains Mono styling and mobile responsive CSS
 ├── .streamlit/config.toml  # Default dark monochrome theme and upload limit
 ├── tests/                  # Unit tests for extraction and analysis

@@ -9,6 +9,7 @@ import streamlit as st
 
 from analyzer import AVAILABLE_MODELS, DEFAULT_MODEL, AnalysisError, stream_analysis
 from extractor import DocumentData, ExtractionError, extract_from_bytes, extract_from_url
+from keywords import bag_of_words_text, keywords_markdown
 from styles import get_custom_css
 
 load_dotenv()
@@ -104,13 +105,27 @@ def _render_result(doc: DocumentData, markdown_output: str) -> None:
         unsafe_allow_html=True,
     )
     st.markdown(markdown_output)
+    _render_keywords_and_export(doc, markdown_output)
+
+
+# Render the keyword frequency table, download button, and source/bag-of-words toggles.
+def _render_keywords_and_export(doc: DocumentData, markdown_output: str) -> None:
+    keywords_md = keywords_markdown(doc.text)
+    if keywords_md:
+        st.markdown(keywords_md)
     st.divider()
+    export = f"# {doc.title}\n\n{markdown_output}\n"
+    if keywords_md:
+        export += f"\n{keywords_md}\n"
     st.download_button(
         "Download .md",
-        data=f"# {doc.title}\n\n{markdown_output}\n",
+        data=export,
         file_name=_export_filename(doc.title),
         mime="text/markdown",
     )
+    if keywords_md:
+        with st.expander("Bag of words"):
+            st.text(bag_of_words_text(doc.text))
     with st.expander("Extracted source text"):
         st.text(doc.text)
 
@@ -149,16 +164,7 @@ def main() -> None:
             result = st.write_stream(stream_analysis(doc, api_key=api_key, model=model))
             st.session_state["doc"] = doc
             st.session_state["result"] = result
-
-            st.divider()
-            st.download_button(
-                "Download .md",
-                data=f"# {doc.title}\n\n{result}\n",
-                file_name=_export_filename(doc.title),
-                mime="text/markdown",
-            )
-            with st.expander("Extracted source text"):
-                st.text(doc.text)
+            _render_keywords_and_export(doc, result)
             return
         except (ExtractionError, AnalysisError) as exc:
             st.error(str(exc))

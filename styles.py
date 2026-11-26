@@ -168,6 +168,28 @@ button[kind="secondary"],
     font-size: 1.15rem;
 }}
 
+/* Style the keyword frequency table with the same sharp, bordered TUI look. */
+[data-testid="stMarkdownContainer"] table {{
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border-subtle);
+    font-size: 0.88rem;
+}}
+
+[data-testid="stMarkdownContainer"] th,
+[data-testid="stMarkdownContainer"] td {{
+    border: 1px solid var(--border-subtle) !important;
+    padding: 0.35rem 0.7rem;
+    color: var(--text);
+    background-color: var(--bg);
+}}
+
+[data-testid="stMarkdownContainer"] th {{
+    color: var(--accent);
+    font-weight: 600;
+    background-color: var(--surface);
+}}
+
 [data-testid="stMarkdownContainer"] {{
     overflow-wrap: anywhere;
     word-break: break-word;

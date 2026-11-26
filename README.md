@@ -32,6 +32,7 @@
 - **File upload & URL fetch** — supports `.pdf`, `.docx`, `.txt`, `.md`, `.csv`, remote PDF/DOCX links, and web articles.
 - **Streamed output** — renders the TL;DR, summary, key terms, and conditional citations live as Gemini generates them.
 - **Keyword frequency** — ranks the most frequent words locally (bag of words, stopwords removed) with counts and share, plus a TF-IDF ranking that surfaces distinctive terms; the full bag of words is one click away.
+- **Rate-limit friendly** — automatically falls back to `gemini-3.5-flash-lite` when `gemini-2.5-flash` is rate limited, and reuses finished briefs when the same document is analyzed again.
 - **Fast local parsing** — uses `pymupdf` for PDFs and caches parsed documents across Streamlit reruns.
 - **Exportable** — download the generated brief as a `.md` file or inspect the extracted source text.
 - **Clean & responsive UI** — sidebar + reading sheet layout styled in JetBrains Nerd Font Mono (with `JetBrains Mono` web fallback) for desktop and mobile.
@@ -61,7 +62,7 @@ Get a free API key from [Google AI Studio](https://aistudio.google.com/apikey), 
 cp .env.example .env
 ```
 
-Set `GEMINI_API_KEY` inside `.env` (you can also paste a key directly in the sidebar for the current session):
+Set `GEMINI_API_KEY` inside `.env`:
 
 ```env
 GEMINI_API_KEY=api_key_here
@@ -100,7 +101,7 @@ pytest -v
 ## Notes
 
 - Scanned image-only PDFs without an embedded text layer cannot be read without OCR and will return an error message.
-- If you hit the free-tier rate limit on `gemini-2.5-flash`, switch to `gemini-3.5-flash-lite` in the sidebar or `.env`.
+- If `gemini-2.5-flash` hits its free-tier rate limit, Docbrief automatically retries with `gemini-3.5-flash-lite` (each model has its own quota). Briefs are cached in memory, so re-analyzing the same document makes no new API call.
 
 ## License
 

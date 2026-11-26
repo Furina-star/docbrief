@@ -1,8 +1,10 @@
 """Streamlit web interface for uploading or fetching documents and streaming briefs."""
 
+import hashlib
 import os
 from pathlib import Path
 import re
+import threading
 
 from dotenv import load_dotenv
 import streamlit as st
@@ -36,6 +38,36 @@ def _load_uploaded_file(filename: str, raw_bytes: bytes) -> DocumentData:
 @st.cache_data(show_spinner=False)
 def _load_url(url: str) -> DocumentData:
     return extract_from_url(url)
+
+
+MAX_CACHED_BRIEFS = 200
+
+
+# Shared in-memory store of finished briefs, so re-analyzing a document costs no API call.
+@st.cache_resource(show_spinner=False)
+def _brief_cache() -> tuple[dict[str, str], threading.Lock]:
+    return {}, threading.Lock()
+
+
+# Build a stable cache key from the document's title and extracted text.
+def _brief_key(doc: DocumentData) -> str:
+    return hashlib.sha256(f"{doc.title}\0{doc.text}".encode("utf-8")).hexdigest()
+
+
+# Look up a previously generated brief for this document, if any.
+def _cached_brief(key: str) -> str | None:
+    cache, lock = _brief_cache()
+    with lock:
+        return cache.get(key)
+
+
+# Save a finished brief, dropping the oldest entries once the cache is full.
+def _remember_brief(key: str, result: str) -> None:
+    cache, lock = _brief_cache()
+    with lock:
+        cache[key] = result
+        while len(cache) > MAX_CACHED_BRIEFS:
+            cache.pop(next(iter(cache)))
 
 
 # Format compact document metadata for display in the header and sidebar.
@@ -163,7 +195,14 @@ def main() -> None:
                 f'<div class="docbrief-meta">{_format_stats(doc)}</div>',
                 unsafe_allow_html=True,
             )
-            result = st.write_stream(stream_analysis(doc, api_key=api_key, model=model))
+            key = _brief_key(doc)
+            result = _cached_brief(key)
+            if result is None:
+                result = st.write_stream(stream_analysis(doc, api_key=api_key, model=model))
+                if isinstance(result, str) and result.strip():
+                    _remember_brief(key, result)
+            else:
+                st.markdown(result)
             st.session_state["doc"] = doc
             st.session_state["result"] = result
             _render_keywords_and_export(doc, result)

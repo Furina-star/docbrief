@@ -44,7 +44,32 @@ def build_prompt(doc: DocumentData) -> str:
     return f"Document title: {doc.title}\n\n{body}"
 
 
-# Stream Markdown analysis chunks from Google Gemini for the given document.
+# Return True when an error is a temporary quota or capacity limit worth retrying elsewhere.
+def _is_retryable(message: str) -> bool:
+    lower = message.lower()
+    return any(
+        marker in lower
+        for marker in ("429", "quota", "resource_exhausted", "503", "unavailable")
+    )
+
+
+# Convert a raw Gemini exception into a user-friendly AnalysisError.
+def _to_analysis_error(exc: Exception) -> AnalysisError:
+    lower = str(exc).lower()
+    if "429" in lower or "quota" in lower or "resource_exhausted" in lower:
+        return AnalysisError(
+            "Too many requests right now. Please wait a moment and try again."
+        )
+    if "503" in lower or "unavailable" in lower:
+        return AnalysisError(
+            "Service is temporarily busy. Please try again in a few seconds."
+        )
+    if "401" in lower or "403" in lower or "api_key_invalid" in lower or "api key" in lower:
+        return AnalysisError("Service configuration error. Please try again later.")
+    return AnalysisError("Could not analyze this document right now. Please try again.")
+
+
+# Stream Markdown analysis from Gemini, falling back to the other model when rate limited.
 def stream_analysis(
     doc: DocumentData, api_key: str, model: str = DEFAULT_MODEL
 ) -> Iterator[str]:
@@ -62,32 +87,27 @@ def stream_analysis(
         system_instruction=SYSTEM_INSTRUCTION,
         temperature=0.2,
     )
+    prompt = build_prompt(doc)
+    models = [model] + [m for m in AVAILABLE_MODELS if m != model]
 
-    try:
-        response = client.models.generate_content_stream(
-            model=model,
-            contents=build_prompt(doc),
-            config=config,
-        )
-        for chunk in response:
-            if chunk.text:
-                yield chunk.text
-    except Exception as exc:
-        logger.error("Gemini stream failed (%s): %s", model, exc)
-        message = str(exc)
-        lower = message.lower()
-        if "429" in lower or "quota" in lower or "resource_exhausted" in lower:
-            raise AnalysisError(
-                "Too many requests right now. Please wait a moment and try again."
-            ) from exc
-        if "503" in lower or "unavailable" in lower:
-            raise AnalysisError(
-                "Service is temporarily busy. Please try again in a few seconds."
-            ) from exc
-        if "401" in lower or "403" in lower or "api_key_invalid" in lower or "api key" in lower:
-            raise AnalysisError(
-                "Service configuration error. Please try again later."
-            ) from exc
-        raise AnalysisError(
-            "Could not analyze this document right now. Please try again."
-        ) from exc
+    for index, current_model in enumerate(models):
+        started = False
+        try:
+            response = client.models.generate_content_stream(
+                model=current_model,
+                contents=prompt,
+                config=config,
+            )
+            for chunk in response:
+                if chunk.text:
+                    started = True
+                    yield chunk.text
+            return
+        except Exception as exc:
+            logger.error("Gemini stream failed (%s): %s", current_model, exc)
+            has_fallback = index < len(models) - 1
+            # Only switch models if nothing was shown yet; a half-written brief can't be resumed.
+            if has_fallback and not started and _is_retryable(str(exc)):
+                logger.warning("Falling back from %s to %s", current_model, models[index + 1])
+                continue
+            raise _to_analysis_error(exc) from exc

@@ -28,6 +28,141 @@ LIGHT_VARS = """
     --btn-hover: #27272a;
 """
 
+# Light mode only: repaint Streamlit's built-in widgets, which otherwise keep the dark base theme.
+LIGHT_OVERRIDES = """
+[data-testid="stApp"] {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+}
+
+/* Header, toolbar, and sidebar open/close icons. */
+[data-testid="stHeader"] button,
+[data-testid="stHeader"] a,
+[data-testid="stHeader"] span,
+[data-testid="stToolbar"] *,
+[data-testid="stExpandSidebarButton"],
+[data-testid="stExpandSidebarButton"] *,
+[data-testid="stSidebarCollapsedControl"] *,
+[data-testid="stSidebarCollapseButton"] button,
+[data-testid="stSidebarCollapseButton"] * {
+    color: var(--text) !important;
+}
+
+/* Error messages: readable dark red text on a soft red panel. */
+[data-testid="stAlertContainer"] {
+    background-color: #fdecec !important;
+    border: 1px solid #f5c2c2 !important;
+}
+
+[data-testid="stAlertContainer"] p,
+[data-testid="stAlertContainer"] span,
+[data-testid="stAlertContainer"] div {
+    color: #8f1d1d !important;
+}
+
+/* Radio buttons: dark ring for the selected option, outlined circle otherwise. */
+[data-testid="stRadioOption"] > div > div:first-child {
+    background-color: var(--bg) !important;
+    border: 1px solid var(--text-muted) !important;
+}
+
+[data-testid="stRadioOption"] > div > div:first-child > div {
+    background-color: var(--bg) !important;
+}
+
+[data-testid="stRadioOption"][data-selected="true"] > div > div:first-child {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+/* Toggle switch: dark track when on, grey track when off. */
+[data-testid="stCheckbox"] label > div:first-of-type {
+    background-color: var(--border-subtle) !important;
+}
+
+[data-testid="stCheckbox"] label > div:first-of-type > div {
+    background-color: #ffffff !important;
+}
+
+[data-testid="stCheckbox"][data-selected="true"] label > div:first-of-type {
+    background-color: var(--accent) !important;
+}
+
+/* Dividers. */
+hr {
+    border-color: var(--border-subtle) !important;
+}
+
+/* Uploaded file chip. */
+[data-testid="stFileChip"] {
+    background-color: var(--bg) !important;
+    border: 1px solid var(--border-subtle) !important;
+}
+
+[data-testid="stFileChip"] > div:first-child {
+    background-color: var(--term-bar) !important;
+}
+
+[data-testid="stFileChip"],
+[data-testid="stFileChip"] *,
+[data-testid="stFileChipName"] {
+    color: var(--text) !important;
+}
+
+[data-testid="stFileChipDeleteBtn"] *,
+[data-testid="stFileUploaderDropzone"] small,
+[data-testid="stFileUploaderDropzone"] span {
+    color: var(--text-muted) !important;
+}
+
+/* Expanders ("Bag of words", "Extracted source text"). */
+[data-testid="stExpander"] details {
+    border-color: var(--border-subtle) !important;
+    background-color: var(--bg) !important;
+}
+
+[data-testid="stExpander"] summary,
+[data-testid="stExpander"] summary:hover,
+[data-testid="stExpander"] summary:focus {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+}
+
+[data-testid="stExpander"] summary *,
+[data-testid="stText"],
+[data-testid="stText"] * {
+    color: var(--text) !important;
+}
+
+[data-testid="stExpanderDetails"] {
+    border-color: var(--border-subtle) !important;
+}
+
+/* URL text box. */
+[data-baseweb="input"],
+[data-baseweb="base-input"] {
+    background-color: var(--bg) !important;
+    border-color: var(--border-subtle) !important;
+}
+
+.stTextInput input::placeholder {
+    color: var(--text-muted) !important;
+}
+
+/* Inline code and code blocks inside the brief. */
+[data-testid="stMarkdownContainer"] code,
+[data-testid="stMarkdownContainer"] pre,
+[data-testid="stCode"] pre {
+    background-color: var(--term-bg) !important;
+    color: var(--text) !important;
+}
+
+/* Loading spinner text. */
+[data-testid="stSpinner"] * {
+    color: var(--text-muted) !important;
+}
+"""
+
 CSS_TEMPLATE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
@@ -227,6 +362,7 @@ button[kind="secondary"],
         width: 100% !important;
     }}
 }}
+{light_overrides}
 </style>
 """
 
@@ -234,4 +370,5 @@ button[kind="secondary"],
 # Return the full custom stylesheet for either dark (default) or light mode.
 def get_custom_css(light_mode: bool = False) -> str:
     theme_vars = LIGHT_VARS if light_mode else DARK_VARS
-    return CSS_TEMPLATE.format(theme_vars=theme_vars)
+    light_overrides = LIGHT_OVERRIDES if light_mode else ""
+    return CSS_TEMPLATE.format(theme_vars=theme_vars, light_overrides=light_overrides)
